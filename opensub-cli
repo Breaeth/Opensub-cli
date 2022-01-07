@@ -98,7 +98,7 @@ if [ "$serie" = true ]; then
 	
 	if grep -Fqi 'download="download"' html.tmp #Test if we have only one result and we are on a download page or few results and we are not on a download page
 	then
-        product=$(grep -i -n 'download="download"' html.tmp | grep -o 'data-product-id=".*" data-product-name' |sed -e 's/data-product-id="\(.*\)" data-product-name/\1/')
+        product=$(grep -i -n 'download="download"' html.tmp | sed -e 's/.*data-product-id="\(.*\)" data-product-name.*/\1/')
 	elif grep -Fqi -m 1 -n 'href="/en/subtitleserve/sub/' html.tmp
 	then
         product=$(grep -i -m 1 -n 'href="/en/subtitleserve/sub/' html.tmp  | grep -o 'subtitleserve/sub/.* onclick=' | sed -e 's/subtitleserve\(.*\)" onclick=/\1/' | cut -c 6- ) #For more info on this line see : https://www.reddit.com/r/commandline/comments/js04hv/cat/
@@ -142,12 +142,13 @@ fi
 
 dlurl="https://www.opensubtitles.org/en/subtitleserve/sub/"
 wget -q -O "$ZipFileName" $dlurl$product
-echo $dlurl$product
-mv $ZipFileName $output
-cd $output #This line avoid to be unzip and rm if output is empty, oups....
-unzip $ZipFileName
-rm *.nfo
-rm *.zip
+if [ ! $output == "" ]; then
+	mv $ZipFileName $output
+	cd $output #This line avoid to be unzip and rm if output is empty, oups....
+	unzip $ZipFileName
+	rm *.nfo
+	rm *.zip
+fi
 if [ -f "/bin/notify-send" ]; then
     notify_yes
 fi
