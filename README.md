@@ -5,10 +5,14 @@ A cli tools for auto download opensubtitles.org subtitles !
 
 For the series : 
   The script check if there is a season and an episode like : SXXEXX with X a number
+  
   exemple : S01E01 , S04E10, S12E56 etc ...
+  
 For the movie : 
-  If the script do not detect if it's a serie, i will take everything before the resolution, and that will be the title : 
+  If the script do not detect if it's a serie, i will take everything before the resolution, and that will be the title.
+  
   exemple : Nobody.2021.1080p.things.and.other.stuff ; the script will just keep Nobody 2021 as title.
+  
   The resolution can be : 480p, 720p, 1080p etc... I need to add HDRip by the way héhé ....
   
  In short : 
