@@ -29,7 +29,7 @@ A cli tools for auto download opensubtitles.org subtitles !
 
 [X] Making a full cli tool for auto download subtitles wich work great 
 
-[ ] Add security for cd $output 
+[X] Add security for cd $output 
 
 [X] Add "HDRip" for detect movie
 
