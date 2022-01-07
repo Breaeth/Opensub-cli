@@ -1,0 +1,138 @@
+#!/bin/bash
+############################################################
+# Help                                                     #
+############################################################
+Help()
+{
+   echo "A bash cli tool for download on opensubtitles.org the subtitles of your series ! "
+   echo
+   echo "Syntax: opensub-cli [-h|-l|-o|-s]"
+   echo "options:"
+   echo "-h     Print this Help."
+   echo "-s 	Put the name of your file here ex : Rick-and-Morty-S04E07-1080p-WEBRip-x264-BTX-TGx"
+   echo ""
+   echo "-l     Choose your langage with 3 letters ex : fre for French "
+   echo " 	The other language : eng,dut,dan,fin etc .. see : opensubtitles.org for more."
+   echo "-o     The output of the file must finish by / "
+   echo
+}
+
+############################################################
+# Main program                                             #
+############################################################ 
+output="" #you can modifie this if you want for do not use -o option
+serie=false
+film=false
+############################################################
+# Getting the parameters			           #
+############################################################
+# Get the options
+while getopts "h s:l:o:" option; do
+   case $option in
+      h) # display Help
+         Help
+         exit;;
+      s) 
+         search=$OPTARG;;
+
+      l) 
+         language=$OPTARG;;
+
+      o) 
+         output=$OPTARG;;
+
+     \?) # Invalid option
+         echo "Error: Invalid option"
+         exit;;
+   esac
+done
+############################################################
+# PARSE THE VIDEO NAME                                     #
+############################################################
+
+#Make space for analysis
+search=$(sed "s/-/ /g"  <<< $search) #replace all - by space 
+search=$(sed "s/\./ /g"  <<< $search) #replace all . by space
+
+re='^[0-9]+$' #Regex number
+for token in $search;
+do
+	if [ ${#token}==5 ] && [[ $token = S* ]] && [[ ${token:1:2} =~ $re ]] && [[ ${token:4:5} =~ $re ]] && [[ $token = *E* ]]  #Search for S(num)(num)E(num)(num) like S05E01
+	then
+		season=${token:1:2}
+		episode=${token:4:5}
+		movie=${search%$token*}
+		serie=true
+	fi
+	if [ ${#token}==4 ] || [ ${#token}==4 ] && [[ ${token} = *p ]] && [[ $token = *0* ]] #Search for XXX0p or XX0p like 1080p or 720p or 480p
+        then
+                movie=${search%$token*}
+    		film=true            
+        fi
+done 
+
+############################################################
+# LET'S SCRAP                                              #
+############################################################
+
+#Add + for satisfied the futur research url
+movie=$(sed "s/ /+/g"  <<< $movie)
+
+### GETTING THE PRODUCT (wich is the subtitle code) ###
+
+
+if [ "$serie" = true ]; then
+
+	search="https://www.opensubtitles.org/en/search/sublanguageid-$language/season-"$season"/episode-"$episode"/moviename-"$movie""
+	ZipFileName=$movie"S"$season"E"$episode-$language"-str.zip"	
+	wget -q -O html.tmp $search
+	
+	if grep -Fqi 'download="download"' html.tmp #Test if we have only one result and we are on a download page or few results and we are not on a download page
+	then
+        product=$(grep -i -n 'download="download"' html.tmp | grep -o 'data-product-id=".*" data-product-name' |sed -e 's/data-product-id="\(.*\)" data-product-name/\1/')
+	elif grep -Fqi -m 1 -n 'href="/en/subtitleserve/sub/' html.tmp
+	then
+        product=$(grep -i -m 1 -n 'href="/en/subtitleserve/sub/' html.tmp  | grep -o 'subtitleserve/sub/.* onclick=' | sed -e 's/subtitleserve\(.*\)" onclick=/\1/' | cut -c 6- ) #For more info on this line see : https://www.reddit.com/r/commandline/comments/js04hv/cat/
+	else
+		echo "Oups we do not have find the subtitles of your serie, sorry ..."
+		exit
+	fi
+
+elif [ "$film" = true ]; then
+
+	search="https://www.opensubtitles.org/en/search2/sublanguageid-$language/moviename-$movie"
+	ZipFileName=$movie"-str.zip"
+	wget -q -O html.tmp $search
+	
+	if grep -Fqi -m 1 -n 'href="/en/subtitleserve/sub/' html.tmp
+        then
+	        product=$(grep -i -m 1 -n 'href="/en/subtitleserve/sub/' html.tmp  | grep -o 'subtitleserve/sub/.* onclick=' | sed -e 's/subtitleserve\(.*\)" onclick=/\1/' | cut -c 6- ) 	
+	
+	elif grep -Fqi 'class="bnone"' html.tmp #The movie isn't find directly we are going to pick the id of the first on the list ^^
+	then
+		idMovie=$(grep -i -m 1 -n 'class="bnone"' html.tmp | sed -e 's/.*main\(.*\)"><strong.*/\1/' ) 
+		search="https://www.opensubtitles.org/en/search/sublanguageid-$language/idmovie-"$idMovie	
+		wget -q -O html.tmp $search	
+		product=$(grep -i -m 1 -n 'href="/en/subtitleserve/sub/' html.tmp | sed -e 's/.*subtitleserve\(.*\)" onclick=.*/\1/' | cut -c 6-  ) 	
+		
+	else 
+		echo "Oups we do not have find the subtitles of your movie, sorry ..."
+	fi
+else 
+	echo "ERROR : The video name is incorrect !" 
+	echo "see -h for more informations"
+	exit
+fi
+
+### Just download the zip file and do some cool stuff ###
+
+dlurl="https://www.opensubtitles.org/en/subtitleserve/sub/"
+wget -q -O "$ZipFileName" $dlurl$product
+echo $dlurl$product
+mv $ZipFileName $output
+cd $output #This line avoid to be unzip and rm if output is empty, oups.... 
+unzip $ZipFileName
+rm *.nfo
+rm *.zip
+echo $ZipFileName "have been downloaded"
+echo "Enjoy your subtitles !"
