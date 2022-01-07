@@ -19,7 +19,7 @@ Help()
 
 ############################################################
 # Main program                                             #
-############################################################ 
+############################################################
 output="" #you can modifie this if you want for do not use -o option
 serie=false
 film=false
@@ -32,13 +32,13 @@ while getopts "h s:l:o:" option; do
       h) # display Help
          Help
          exit;;
-      s) 
+      s)
          search=$OPTARG;;
 
-      l) 
+      l)
          language=$OPTARG;;
 
-      o) 
+      o)
          output=$OPTARG;;
 
      \?) # Invalid option
@@ -46,12 +46,21 @@ while getopts "h s:l:o:" option; do
          exit;;
    esac
 done
+
+notify_yes (){
+	notify-send Subtitles "Your subtitles have been found ! "$ZipFileName
+}
+notify_no(){
+	notify-send Subtitles "Sorry we do not have found your subtitle"
+}
+
+
 ############################################################
 # PARSE THE VIDEO NAME                                     #
 ############################################################
 
 #Make space for analysis
-search=$(sed "s/-/ /g"  <<< $search) #replace all - by space 
+search=$(sed "s/-/ /g"  <<< $search) #replace all - by space
 search=$(sed "s/\./ /g"  <<< $search) #replace all . by space
 
 re='^[0-9]+$' #Regex number
@@ -64,12 +73,12 @@ do
 		movie=${search%$token*}
 		serie=true
 	fi
-	if [ ${#token}==4 ] || [ ${#token}==4 ] && [[ ${token} = *p ]] && [[ $token = *0* ]] #Search for XXX0p or XX0p like 1080p or 720p or 480p
+	if [ ${#token}==5 ] || [ ${#token}==4 ] && [[ ${token} = *p ]] && [[ $token = *0* ]] || [[ $token == HDRip ]] #Search for XXX0p or XX0p like 1080p or 720p or 480p
         then
                 movie=${search%$token*}
-    		film=true            
+    		film=true
         fi
-done 
+done
 
 ############################################################
 # LET'S SCRAP                                              #
@@ -94,7 +103,9 @@ if [ "$serie" = true ]; then
 	then
         product=$(grep -i -m 1 -n 'href="/en/subtitleserve/sub/' html.tmp  | grep -o 'subtitleserve/sub/.* onclick=' | sed -e 's/subtitleserve\(.*\)" onclick=/\1/' | cut -c 6- ) #For more info on this line see : https://www.reddit.com/r/commandline/comments/js04hv/cat/
 	else
-		echo "Oups we do not have find the subtitles of your serie, sorry ..."
+		if [ -f "/bin/notify-send" ]; then
+  		  notify_no
+		fi
 		exit
 	fi
 
@@ -110,16 +121,19 @@ elif [ "$film" = true ]; then
 	
 	elif grep -Fqi 'class="bnone"' html.tmp #The movie isn't find directly we are going to pick the id of the first on the list ^^
 	then
-		idMovie=$(grep -i -m 1 -n 'class="bnone"' html.tmp | sed -e 's/.*main\(.*\)"><strong.*/\1/' ) 
+		idMovie=$(grep -i -m 1 -n 'class="bnone"' html.tmp | sed -e 's/.*main\(.*\)"><strong.*/\1/' )
 		search="https://www.opensubtitles.org/en/search/sublanguageid-$language/idmovie-"$idMovie	
 		wget -q -O html.tmp $search	
 		product=$(grep -i -m 1 -n 'href="/en/subtitleserve/sub/' html.tmp | sed -e 's/.*subtitleserve\(.*\)" onclick=.*/\1/' | cut -c 6-  ) 	
 		
-	else 
-		echo "Oups we do not have find the subtitles of your movie, sorry ..."
+	else
+		if [ -f "/bin/notify-send" ]; then
+  		  notify_no
+		fi
+		exit
 	fi
-else 
-	echo "ERROR : The video name is incorrect !" 
+else
+	echo "ERROR : The video name is incorrect !"
 	echo "see -h for more informations"
 	exit
 fi
@@ -130,9 +144,10 @@ dlurl="https://www.opensubtitles.org/en/subtitleserve/sub/"
 wget -q -O "$ZipFileName" $dlurl$product
 echo $dlurl$product
 mv $ZipFileName $output
-cd $output #This line avoid to be unzip and rm if output is empty, oups.... 
+cd $output #This line avoid to be unzip and rm if output is empty, oups....
 unzip $ZipFileName
 rm *.nfo
 rm *.zip
-echo $ZipFileName "have been downloaded"
-echo "Enjoy your subtitles !"
+if [ -f "/bin/notify-send" ]; then
+    notify_yes
+fi
