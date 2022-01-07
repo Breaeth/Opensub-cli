@@ -13,7 +13,7 @@ A cli tools for auto download opensubtitles.org subtitles !
   
   exemple : Nobody.2021.1080p.things.and.other.stuff ; the script will just keep Nobody 2021 as title.
   
-  The resolution can be : 480p, 720p, 1080p etc... I need to add HDRip by the way héhé ....
+  The resolution can be : 480p, 720p, 1080p etc ... Or HDRip ! 
   
  #### In short : ####
    Your video name must be like :
@@ -31,6 +31,8 @@ A cli tools for auto download opensubtitles.org subtitles !
 
 [ ] Add security for cd $output 
 
-[ ] Add "HDRip" for detect movie
+[X] Add "HDRip" for detect movie
 
 [ ] Simplify all my pipes and simplify the code in general  
+
+[X] Add notifier
