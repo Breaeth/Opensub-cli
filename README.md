@@ -1,5 +1,10 @@
 # Opensub-cli
-A cli tools for auto download opensubtitles.org subtitles ! 
+A cli tools for auto download opensubtitles.org subtitles specialy design for Notflix ! 
+
+
+## Exemple of command ##
+
+``` opensub-cli  -o OUTPUT -l LANGUAGE -s NAME   ```
 
 ### How it work 
 
