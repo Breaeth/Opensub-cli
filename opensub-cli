@@ -24,7 +24,7 @@ output="" #you can modifie this if you want for do not use -o option
 serie=false
 film=false
 ############################################################
-# Getting the parameters			           #
+# Getting the parameters			          #
 ############################################################
 # Get the options
 while getopts "h s:l:o:" option; do
@@ -80,6 +80,7 @@ do
         fi
 done
 
+
 ############################################################
 # LET'S SCRAP                                              #
 ############################################################
@@ -104,7 +105,7 @@ if [ "$serie" = true ]; then
         product=$(grep -i -m 1 -n 'href="/en/subtitleserve/sub/' html.tmp  | grep -o 'subtitleserve/sub/.* onclick=' | sed -e 's/subtitleserve\(.*\)" onclick=/\1/' | cut -c 6- ) #For more info on this line see : https://www.reddit.com/r/commandline/comments/js04hv/cat/
 	else
 		if [ -f "/bin/notify-send" ]; then
-  		  notify_no
+  		 notify_no
 		fi
 		exit
 	fi
@@ -117,7 +118,7 @@ elif [ "$film" = true ]; then
 	
 	if grep -Fqi -m 1 -n 'href="/en/subtitleserve/sub/' html.tmp
         then
-	        product=$(grep -i -m 1 -n 'href="/en/subtitleserve/sub/' html.tmp  | grep -o 'subtitleserve/sub/.* onclick=' | sed -e 's/subtitleserve\(.*\)" onclick=/\1/' | cut -c 6- ) 	
+	       product=$(grep -i -m 1 -n 'href="/en/subtitleserve/sub/' html.tmp  | grep -o 'subtitleserve/sub/.* onclick=' | sed -e 's/subtitleserve\(.*\)" onclick=/\1/' | cut -c 6- ) 	
 	
 	elif grep -Fqi 'class="bnone"' html.tmp #The movie isn't find directly we are going to pick the id of the first on the list ^^
 	then
@@ -128,7 +129,7 @@ elif [ "$film" = true ]; then
 		
 	else
 		if [ -f "/bin/notify-send" ]; then
-  		  notify_no
+  		 notify_no
 		fi
 		exit
 	fi
@@ -142,6 +143,8 @@ fi
 
 dlurl="https://www.opensubtitles.org/en/subtitleserve/sub/"
 wget -q -O "$ZipFileName" $dlurl$product
+
+echo $output
 if [ ! $output == "" ]; then
 	mv $ZipFileName $output
 	cd $output #This line avoid to be unzip and rm if output is empty, oups....
