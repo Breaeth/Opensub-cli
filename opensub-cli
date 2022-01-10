@@ -144,7 +144,6 @@ fi
 dlurl="https://www.opensubtitles.org/en/subtitleserve/sub/"
 wget -q -O "$ZipFileName" $dlurl$product
 
-echo $output
 if [ ! $output == "" ]; then
 	mv $ZipFileName $output
 	cd $output #This line avoid to be unzip and rm if output is empty, oups....
