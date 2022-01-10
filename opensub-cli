@@ -73,7 +73,7 @@ do
 		movie=${search%$token*}
 		serie=true
 	fi
-	if [ ${#token}==5 ] || [ ${#token}==4 ] && [[ ${token} = *p ]] && [[ $token = *0* ]] || [[ $token == HDRip ]] && [[ serie!=true ]] #Search for XXX0p or XX0p like 1080p or 720p or 480p
+	if [ ${#token}==5 ] || [ ${#token}==4 ] && [[ ${token} = *p ]] && [[ $token = *0* ]] || [[ $token == HDRip ]] && [[ ! "$serie" = true ]] #Search for XXX0p or XX0p like 1080p or 720p or 480p
         then
                 movie=${search%$token*}
     		film=true
